@@ -100,8 +100,9 @@ SINGLE_OP       [\{\}\.\@\~\;\*\/\+\-\<\=\:\(\)\,\[\]]
 
   /*--------- Comment ---------------*/
 <INITIAL>\(\*         BEGIN(COMMENT);
-<COMMENT><<EOF>>  { cool_yylval.error_msg = "Unterminated string constant";
-                    return ERROR; }
+<COMMENT><<EOF>>  { cool_yylval.error_msg = "EOF in comment";
+                    BEGIN(INITIAL);
+                    return ERROR;}
 <COMMENT>\*\)         BEGIN(INITIAL);
 <COMMENT>.          ;
 
@@ -145,15 +146,20 @@ SINGLE_OP       [\{\}\.\@\~\;\*\/\+\-\<\=\:\(\)\,\[\]]
   /*--------- Bool --------------*/
 
 <INITIAL>true     { cool_yylval.boolean = true;
-                  return BOOL_CONST; }
+                    return BOOL_CONST; }
 <INITIAL>false    { cool_yylval.boolean = false;
-                  return BOOL_CONST; }
+                    return BOOL_CONST; }
 
 <INITIAL>{TID}    { cool_yylval.symbol = idtable.add_string(yytext, yyleng); 
-                  return TYPEID; }
+                    return TYPEID; }
 <INITIAL>{OID}    { cool_yylval.symbol = idtable.add_string(yytext, yyleng); 
-                  return OBJECTID; }
+                    return OBJECTID; }
 
+<INITIAL>\*\)     { cool_yylval.error_msg = "Unmatched *)";
+                    return ERROR; }
+
+<INITIAL>.        { cool_yylval.error_msg = yytext;
+                    return ERROR; }
 
  /*
   * Keywords are case-insensitive except for the values true and false,
